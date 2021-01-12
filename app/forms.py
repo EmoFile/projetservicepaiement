@@ -21,5 +21,5 @@ class PaymentForm(forms.ModelForm):
         try:
             return int(float(self.cleaned_data['amount']) * 100)
         except ValueError:
-            self.add_error('amount', '')
+            self.add_error('amount', 'the amount should be a decimal with 2 digit after comma')
             return None

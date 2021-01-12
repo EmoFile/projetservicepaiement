@@ -24,6 +24,6 @@ urlpatterns = [
 
 urlpatterns += [
     path('paymentForm/', CreatePayment.as_view()),
-    path('paymentList/', PaymentList.as_view()),
+    path('paymentList/', PaymentList.as_view(), name='payment_list'),
     path('ValidationPayment/', ValidationPayment.as_view())
 ]

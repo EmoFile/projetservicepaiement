@@ -1,4 +1,9 @@
-from django.views.generic import CreateView, ListView
+import datetime
+import email.utils as eut
+
+from django.shortcuts import get_object_or_404
+from django.urls import reverse_lazy
+from django.views.generic import ListView, FormView
 import requests
 from django.http import HttpResponse
 from django.utils.decorators import method_decorator
@@ -10,10 +15,20 @@ from app.forms import PaymentForm
 from app.models.payment import Payment
 
 
-class CreatePayment(CreateView):
+class CreatePayment(FormView):
+    success_url = reverse_lazy('payment_list')
     model = Payment
     form_class = PaymentForm
     template_name = 'paymentForm.html'
+
+    def form_valid(self, form):
+        Payment.objects.create(
+            amount=form.cleaned_data['amount'],
+            cardNumber=form.cleaned_data['cardNumber']
+        )
+        created_payment = Payment.objects.last()
+        send_payment(id=created_payment.id, amount=created_payment.amount)
+        return super().form_valid(form)
 
 
 class PaymentList(ListView):
@@ -36,13 +51,20 @@ class ValidationPayment(generic.View):
         return super().dispatch(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
+        print('nassim')
         print(request.POST['id'])
         print(request.POST['amount'])
-        return HttpResponse("OK")
+        return HttpResponse("ça marche")
 
 
 def send_payment(*args, **kwargs):
-    payment = {"id": "2", "amount": "350"}
-    response = requests.post("http://127.0.0.1:8000/ValidationPayment", data=payment)
-    print(response.json())
-
+    payment = {"id": kwargs["id"], "amount": kwargs["amount"]}
+    response = requests.post("http://127.0.0.1:8000/ValidationPayment/", data=payment)
+    if response.status_code == 200:
+        current_payment = get_object_or_404(Payment, id=kwargs["id"])
+        current_payment.date = datetime.datetime(*eut.parsedate(response.headers._store['date'][1])[:6])
+        current_payment.state = "ACCEPTED"
+        current_payment.save()
+    else:
+        print("Error")
+    print(response.headers._store['date'])

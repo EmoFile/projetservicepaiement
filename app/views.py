@@ -38,10 +38,16 @@ class PaymentList(ListView):
     template_name = 'paymentList.html'
     model = Payment
 
-    def get_context_data(self, **kwargs):
+    def get_context_data(self, traited_payments=None, **kwargs):
+        if traited_payments is None:
+            traited_payments = []
         context = super().get_context_data(**kwargs)
-        context['payments'] = Payment.objects.all()
-        context['title'] = 'Liste des paiments'
+        payments = Payment.objects.all()
+        for payment in payments:
+            payment.amount = payment.amount / 100
+            traited_payments.insert(len(traited_payments), payment)
+        context['payments'] = traited_payments
+        context['title'] = 'Liste des paiements'
         return context
 
 

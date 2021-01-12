@@ -12,15 +12,20 @@
             </tr>
             </thead>
             <tbody>
-            {% for payment in object_list %}
+            {% for payment in payments %}
                 <tr>
                     <td>{{ payment.card_number }}</td>
-                    <td>{{ payment.amount }}</td>
+                    <td>{{ payment.amount }}€</td>
                     <td>{{ payment.state }}</td>
                     <td>{{ payment.date }}</td>
                 </tr>
             {% empty %}
-                <tr>No articles yet.</tr>
+                <tr>
+                    <td>No articles yet.</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
             {% endfor %}
             </tbody>
         </table>

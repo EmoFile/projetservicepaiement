@@ -1,21 +1,11 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Liste des paiements</title>
-</head>
-<body>
-
-
-
-<h1>Paiments</h1>
-<ul>
-{% for payment in object_list %}
-    <li>{{ payment.amount }} - {{ payment.date }}</li> ...
-{% empty %}
-    <li>No articles yet.</li>
-{% endfor %}
-</ul>
-
-</body>
-</html>
+{% extends 'base.html' %}
+{% block main %}
+    <h1>Paiments</h1>
+    <ul>
+        {% for payment in object_list %}
+            <li>{{ payment.amount }} - {{ payment.date }}</li> ...
+        {% empty %}
+            <li>No articles yet.</li>
+        {% endfor %}
+    </ul>
+{% endblock %}

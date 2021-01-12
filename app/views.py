@@ -1,19 +1,18 @@
 import datetime
+import requests
 import email.utils as eut
-import logging
 
+import logging
+from app.forms import PaymentForm
+from app.models.payment import Payment
 from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
 from django.views.generic import ListView, FormView
-import requests
 from django.http import HttpResponse
 from django.utils.decorators import method_decorator
 from django.views import generic
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_exempt
-
-from app.forms import PaymentForm
-from app.models.payment import Payment
 
 
 class CreatePayment(FormView):
@@ -22,10 +21,15 @@ class CreatePayment(FormView):
     form_class = PaymentForm
     template_name = 'paymentForm.html'
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Formulaire de paiments'
+        return context
+
     def form_valid(self, form):
         Payment.objects.create(
             amount=form.cleaned_data['amount'],
-            cardNumber=form.cleaned_data['cardNumber']
+            card_number=form.cleaned_data['card_number']
         )
         created_payment = Payment.objects.last()
         result = send_payment(id=created_payment.id, amount=created_payment.amount)
@@ -43,6 +47,7 @@ class PaymentList(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['payments'] = Payment.objects.all()
+        context['title'] = 'Liste des paiments'
         return context
 
 

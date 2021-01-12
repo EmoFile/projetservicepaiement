@@ -63,13 +63,13 @@ class ValidationPayment(generic.View):
         print('nassim')
         print(request.POST['id'])
         print(request.POST['amount'])
-        return HttpResponse("ça marche")
+        return HttpResponse("OK")
 
 
 def send_payment(*args, **kwargs):
     payment = {"id": kwargs["id"], "amount": kwargs["amount"]}
     try:
-        response = requests.post("http://127.0.0.1:8000/zeaefaef", data=payment)
+        response = requests.post("http://127.0.0.1:8000/zeaefaef", json=payment)
         if response.status_code == 200:
             current_payment = get_object_or_404(Payment, id=kwargs["id"])
             current_payment.date = datetime.datetime(*eut.parsedate(response.headers._store['date'][1])[:6])

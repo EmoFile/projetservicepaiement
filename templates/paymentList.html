@@ -1,11 +1,33 @@
 {% extends 'base.html' %}
 {% block main %}
     <h1>Paiments</h1>
-    <ul>
-        {% for payment in object_list %}
-            <li>{{ payment.amount }} - {{ payment.date }}</li> ...
-        {% empty %}
-            <li>No articles yet.</li>
-        {% endfor %}
-    </ul>
+    <div class="col-6 fluid">
+        <table class="table table-striped">
+            <thead class="thead-dark">
+            <tr>
+                <th scope="col">Card number</th>
+                <th scope="col">Amount</th>
+                <th scope="col">State</th>
+                <th scope="col">Date</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for payment in payments %}
+                <tr>
+                    <td>{{ payment.card_number }}</td>
+                    <td>{{ payment.amount }}€</td>
+                    <td>{{ payment.state }}</td>
+                    <td>{{ payment.date }}</td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td>No articles yet.</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
 {% endblock %}

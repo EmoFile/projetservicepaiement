@@ -1,5 +1,6 @@
 import datetime
 import email.utils as eut
+import logging
 
 from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
@@ -27,7 +28,10 @@ class CreatePayment(FormView):
             cardNumber=form.cleaned_data['cardNumber']
         )
         created_payment = Payment.objects.last()
-        send_payment(id=created_payment.id, amount=created_payment.amount)
+        result = send_payment(id=created_payment.id, amount=created_payment.amount)
+        if not result:
+            form.add_error('cardNumber', 'une erreure innatendu est apparu veuillez contactez un admin')
+            return super().form_invalid(form)
         return super().form_valid(form)
 
 
@@ -59,12 +63,19 @@ class ValidationPayment(generic.View):
 
 def send_payment(*args, **kwargs):
     payment = {"id": kwargs["id"], "amount": kwargs["amount"]}
-    response = requests.post("http://127.0.0.1:8000/ValidationPayment/", data=payment)
-    if response.status_code == 200:
-        current_payment = get_object_or_404(Payment, id=kwargs["id"])
-        current_payment.date = datetime.datetime(*eut.parsedate(response.headers._store['date'][1])[:6])
-        current_payment.state = "ACCEPTED"
-        current_payment.save()
-    else:
-        print("Error")
-    print(response.headers._store['date'])
+    try:
+        response = requests.post("http://127.0.0.1:8000/zeaefaef", data=payment)
+        if response.status_code == 200:
+            current_payment = get_object_or_404(Payment, id=kwargs["id"])
+            current_payment.date = datetime.datetime(*eut.parsedate(response.headers._store['date'][1])[:6])
+            current_payment.state = "ACCEPTED"
+            current_payment.save()
+            return True
+        else:
+            response.raise_for_status()
+            print("Error")
+    except requests.exceptions.HTTPError as e:
+        print(e)
+        logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.ERROR, datefmt='%d-%b-%y %H:%M:%S')
+        logging.error(f'{e} - id: {kwargs["id"]} - amount: {kwargs["amount"]}')
+        return False

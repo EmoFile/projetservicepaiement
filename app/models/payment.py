@@ -14,11 +14,11 @@ class Payment(models.Model):
     state = models.CharField(max_length=20,
                              choices=STATE_CHOICES,
                              default=PENDING)
-    cardNumber = models.CharField(max_length=16,
-                                  validators=[MinLengthValidator(16), MaxLengthValidator(16)],
-                                  default='0000000000000000',
-                                  blank=False,
-                                  null=False)
+    card_number = models.CharField(max_length=16,
+                                   validators=[MinLengthValidator(16), MaxLengthValidator(16)],
+                                   default='0000000000000000',
+                                   blank=False,
+                                   null=False)
     date = models.DateTimeField(blank=True,
                                 null=True)
     amount = models.BigIntegerField(validators=[MinValueValidator(0), MaxValueValidator(999999)],

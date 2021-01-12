@@ -8,17 +8,22 @@
 
 <form method="POST">
     {% csrf_token %}
-    {% for field in form %}
-
-        <table class="table table-borderless">
-            <thead>
+    <table class="table table-borderless">
+        {% for field in form %}
             <tr>
                 <th scope="row">{{ field.label }}:</th>
                 <td>{{ field }}</td>
+                {% if field.errors|length %}
+                    <td>
+                        {% for error in field.errors %}
+                            {% autoescape off %}
+                                {{ error }}
+                            {% endautoescape %}
+                        {% endfor %}
+                    </td>
+                {% endif %}
             </tr>
-            </thead>
-        </table>
-
-    {% endfor %}
+        {% endfor %}
+    </table>
     <button type="submit">Valider</button>
 </form>

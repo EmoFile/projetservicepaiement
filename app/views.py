@@ -15,6 +15,7 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_exempt
 
 
+
 class CreatePayment(FormView):
     success_url = reverse_lazy('payment_list')
     model = Payment
@@ -33,8 +34,8 @@ class CreatePayment(FormView):
         )
         created_payment = Payment.objects.last()
         result = send_payment(id=created_payment.id, amount=created_payment.amount)
-        if not result:
-            form.add_error('cardNumber', 'une erreure innatendu est apparu veuillez contactez un admin')
+        if not result['isTrue']:
+            form.add_error('card_number', result['error'])
             return super().form_invalid(form)
         return super().form_valid(form)
 
@@ -77,10 +78,17 @@ def send_payment(*args, **kwargs):
             current_payment.save()
             return True
         else:
+            if response.status_code == 500 or response.status_code == 503:
+                error = "Serveur de paiment inaccesible veuillez réessayer plus tard ou contacter un admin"
+            else:
+                error = "Une erreure innatendu est apparu veuillez contactez un admin"
             response.raise_for_status()
             print("Error")
     except requests.exceptions.HTTPError as e:
         print(e)
-        logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.ERROR, datefmt='%d-%b-%y %H:%M:%S')
+        logging.basicConfig(filename='contactServicePayment.log',
+                            format='%(asctime)s - %(message)s',
+                            level=logging.WARNING,
+                            datefmt='%d-%b-%y %H:%M:%S')
         logging.error(f'{e} - id: {kwargs["id"]} - amount: {kwargs["amount"]}')
-        return False
+        return {'isTrue': False, 'error': error}

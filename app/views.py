@@ -19,6 +19,11 @@ class CreatePayment(FormView):
     form_class = PaymentForm
     template_name = 'paymentForm.html'
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Formulaire de paiments'
+        return context
+
     def form_valid(self, form):
         Payment.objects.create(
             amount=form.cleaned_data['amount'],
@@ -37,6 +42,7 @@ class PaymentList(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['payments'] = Payment.objects.all()
+        context['title'] = 'Liste des paiments'
         return context
 
 

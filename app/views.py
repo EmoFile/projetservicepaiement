@@ -73,7 +73,10 @@ class ValidationPayment(generic.View):
             logging.error(f'no ID {request.META.get("REMOTE_ADDR")}')
             return HttpResponse(status=404)
         try:
-            if isinstance(received['id'], int) and Payment.objects.get(id=1651646):
+            if isinstance(received['id'], int) and Payment.objects.get(id=received["id"]):
+                current_payment = get_object_or_404(Payment, id=received["id"])
+                current_payment.state = "Validated"
+                current_payment.save()
                 return HttpResponse("OK")
         except:
             e = sys.exc_info()[0]
@@ -90,8 +93,8 @@ def send_payment(*args, **kwargs):
             current_payment = get_object_or_404(Payment, id=kwargs["id"])
             print(eut.parsedate_to_datetime(response.headers._store['date'][1]))
             current_payment.date = eut.parsedate_to_datetime(response.headers._store['date'][1])
-            # current_payment.date = datetime.datetime(*eut.parsedate(response.headers._store['date'][1])[:6])
-            current_payment.state = "ACCEPTED"
+            #current_payment.date = datetime.datetime(*eut.parsedate(response.headers._store['date'][1])[:6])
+            current_payment.state = "Accepted"
             current_payment.save()
             return {'isTrue': True}
         else:

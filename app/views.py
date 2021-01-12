@@ -1,4 +1,7 @@
 import datetime
+import json
+import sys
+
 import requests
 import email.utils as eut
 
@@ -13,7 +16,6 @@ from django.utils.decorators import method_decorator
 from django.views import generic
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_exempt
-
 
 
 class CreatePayment(FormView):
@@ -62,21 +64,36 @@ class ValidationPayment(generic.View):
 
     def post(self, request, *args, **kwargs):
         print('nassim')
-        print(request.POST['id'])
-        print(request.POST['amount'])
-        return HttpResponse("OK")
+        received = json.loads(request.body)
+        logging.basicConfig(filename='contactValidationPayment.log',
+                            format='%(asctime)s - %(message)s',
+                            level=logging.WARNING,
+                            datefmt='%d-%b-%y %H:%M:%S')
+        if not 'id' in received:
+            logging.error(f'no ID {request.META.get("REMOTE_ADDR")}')
+            return HttpResponse(status=404)
+        try:
+            if isinstance(received['id'], int) and Payment.objects.get(id=1651646):
+                return HttpResponse("OK")
+        except:
+            e = sys.exc_info()[0]
+            logging.error(f'{e}')
+        logging.error(f'Error the ID is not existing - id: {received["id"]} - IP: {request.META.get("REMOTE_ADDR")}')
+        return HttpResponse(status=404)
 
 
 def send_payment(*args, **kwargs):
     payment = {"id": kwargs["id"], "amount": kwargs["amount"]}
     try:
-        response = requests.post("http://127.0.0.1:8000/zeaefaef", json=payment)
+        response = requests.post("http://127.0.0.1:8000/ValidationPayment/", json=payment)
         if response.status_code == 200:
             current_payment = get_object_or_404(Payment, id=kwargs["id"])
-            current_payment.date = datetime.datetime(*eut.parsedate(response.headers._store['date'][1])[:6])
+            print(eut.parsedate_to_datetime(response.headers._store['date'][1]))
+            current_payment.date = eut.parsedate_to_datetime(response.headers._store['date'][1])
+            # current_payment.date = datetime.datetime(*eut.parsedate(response.headers._store['date'][1])[:6])
             current_payment.state = "ACCEPTED"
             current_payment.save()
-            return True
+            return {'isTrue': True}
         else:
             if response.status_code == 500 or response.status_code == 503:
                 error = "Serveur de paiment inaccesible veuillez réessayer plus tard ou contacter un admin"

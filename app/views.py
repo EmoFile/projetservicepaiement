@@ -1,6 +1,11 @@
 import datetime
+import json
+import sys
+
 import requests
 import email.utils as eut
+
+import logging
 from app.forms import PaymentForm
 from app.models.payment import Payment
 from django.shortcuts import get_object_or_404
@@ -30,7 +35,10 @@ class CreatePayment(FormView):
             card_number=form.cleaned_data['card_number']
         )
         created_payment = Payment.objects.last()
-        send_payment(id=created_payment.id, amount=created_payment.amount)
+        result = send_payment(id=created_payment.id, amount=created_payment.amount)
+        if not result['isTrue']:
+            form.add_error('card_number', result['error'])
+            return super().form_invalid(form)
         return super().form_valid(form)
 
 
@@ -61,19 +69,51 @@ class ValidationPayment(generic.View):
 
     def post(self, request, *args, **kwargs):
         print('nassim')
-        print(request.POST['id'])
-        print(request.POST['amount'])
-        return HttpResponse("ça marche")
+        received = json.loads(request.body)
+        logging.basicConfig(filename='contactValidationPayment.log',
+                            format='%(asctime)s - %(message)s',
+                            level=logging.WARNING,
+                            datefmt='%d-%b-%y %H:%M:%S')
+        if not 'id' in received:
+            logging.error(f'no ID {request.META.get("REMOTE_ADDR")}')
+            return HttpResponse(status=404)
+        try:
+            if isinstance(received['id'], int) and Payment.objects.get(id=received["id"]):
+                current_payment = get_object_or_404(Payment, id=received["id"])
+                current_payment.state = "Validated"
+                current_payment.save()
+                return HttpResponse("OK")
+        except:
+            e = sys.exc_info()[0]
+            logging.error(f'{e}')
+        logging.error(f'Error the ID is not existing - id: {received["id"]} - IP: {request.META.get("REMOTE_ADDR")}')
+        return HttpResponse(status=404)
 
 
 def send_payment(*args, **kwargs):
     payment = {"id": kwargs["id"], "amount": kwargs["amount"]}
-    response = requests.post("http://127.0.0.1:8000/ValidationPayment/", data=payment)
-    if response.status_code == 200:
-        current_payment = get_object_or_404(Payment, id=kwargs["id"])
-        current_payment.date = datetime.datetime(*eut.parsedate(response.headers._store['date'][1])[:6])
-        current_payment.state = "ACCEPTED"
-        current_payment.save()
-    else:
-        print("Error")
-    print(response.headers._store['date'])
+    try:
+        response = requests.post("http://127.0.0.1:8000/ValidationPayment/", json=payment)
+        if response.status_code == 200:
+            current_payment = get_object_or_404(Payment, id=kwargs["id"])
+            print(eut.parsedate_to_datetime(response.headers._store['date'][1]))
+            current_payment.date = eut.parsedate_to_datetime(response.headers._store['date'][1])
+            #current_payment.date = datetime.datetime(*eut.parsedate(response.headers._store['date'][1])[:6])
+            current_payment.state = "Accepted"
+            current_payment.save()
+            return {'isTrue': True}
+        else:
+            if response.status_code == 500 or response.status_code == 503:
+                error = "Serveur de paiment inaccesible veuillez réessayer plus tard ou contacter un admin"
+            else:
+                error = "Une erreure innatendu est apparu veuillez contactez un admin"
+            response.raise_for_status()
+            print("Error")
+    except requests.exceptions.HTTPError as e:
+        print(e)
+        logging.basicConfig(filename='contactServicePayment.log',
+                            format='%(asctime)s - %(message)s',
+                            level=logging.WARNING,
+                            datefmt='%d-%b-%y %H:%M:%S')
+        logging.error(f'{e} - id: {kwargs["id"]} - amount: {kwargs["amount"]}')
+        return {'isTrue': False, 'error': error}

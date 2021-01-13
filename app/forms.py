@@ -13,7 +13,8 @@ class PaymentForm(forms.ModelForm):
         model = Payment
         exclude = ['date', 'state']
 
-    amount = forms.FloatField(max_value=9999.99,
+    amount = forms.FloatField(min_value=0.50,
+                              max_value=9999.99,
                               widget=widgets.TextInput(
                                     attrs={'placeholder': 'Enter the amount'}))
     card_number = forms.IntegerField(widget=widgets.TextInput(

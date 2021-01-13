@@ -126,9 +126,7 @@ def send_payment(*args, **kwargs):
         response = requests.post("http://127.0.0.1:8000/ValidationPayment/", json=payment)
         if response.status_code == 200:
             current_payment = get_object_or_404(Payment, id=kwargs["id"])
-            print(eut.parsedate_to_datetime(response.headers._store['date'][1]))
             current_payment.date = eut.parsedate_to_datetime(response.headers._store['date'][1])
-            #current_payment.date = datetime.datetime(*eut.parsedate(response.headers._store['date'][1])[:6])
             current_payment.state = "Accepted"
             current_payment.save()
             return {'isTrue': True}
@@ -138,12 +136,11 @@ def send_payment(*args, **kwargs):
             else:
                 error = "Une erreure innatendu est apparu veuillez contactez un admin"
             response.raise_for_status()
-            print("Error")
     except requests.exceptions.HTTPError as e:
         print(e)
         logging.basicConfig(filename='contactServicePayment.log',
                             format='%(asctime)s - %(message)s',
                             level=logging.WARNING,
                             datefmt='%d-%b-%y %H:%M:%S')
-        logging.error(f'{e} - id: {kwargs["id"]} - amount: {kwargs["amount"]}')
+        logging.error(f'{e} - status : {response.status_code} - id: {kwargs["id"]} - amount: {kwargs["amount"]}')
         return {'isTrue': False, 'error': error}

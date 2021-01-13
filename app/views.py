@@ -1,6 +1,7 @@
 import datetime
 import json
 import sys
+from urllib import request
 
 import requests
 import email.utils as eut
@@ -74,6 +75,7 @@ class ValidationPayment(generic.View):
                             format='%(asctime)s - %(message)s',
                             level=logging.WARNING,
                             datefmt='%d-%b-%y %H:%M:%S')
+        logging.error(request);
         if not 'id' in received:
             logging.error(f'no ID {request.META.get("REMOTE_ADDR")}')
             return HttpResponse(status=404)
@@ -93,8 +95,8 @@ class ValidationPayment(generic.View):
 def send_payment(*args, **kwargs):
     payment = {"id": kwargs["id"], "amount": kwargs["amount"]}
     try:
-        response = requests.post("http://127.0.0.1:8000/ValidationPayment/", json=payment)
-        if response.status_code == 200:
+        response = requests.post("http://localhost:8080//servicepaiement-rabbitmq/paiement/", json=payment)
+        if response.status_code == 202:
             current_payment = get_object_or_404(Payment, id=kwargs["id"])
             print(eut.parsedate_to_datetime(response.headers._store['date'][1]))
             current_payment.date = eut.parsedate_to_datetime(response.headers._store['date'][1])

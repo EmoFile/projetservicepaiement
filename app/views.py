@@ -141,5 +141,5 @@ def send_payment(*args, **kwargs):
                             format='%(asctime)s - %(message)s',
                             level=logging.WARNING,
                             datefmt='%d-%b-%y %H:%M:%S')
-        logging.error(f'{e} - status : {response.status_code} - id: {kwargs["id"]} - amount: {kwargs["amount"]}')
+        logging.error(f'{e} - id: {kwargs["id"]} - amount: {kwargs["amount"]}')
         return {'isTrue': False, 'error': error}

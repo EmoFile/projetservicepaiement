@@ -20,12 +20,20 @@ class PaymentForm(forms.ModelForm):
         attrs={'placeholder': 'Enter Card number'}))
 
     def clean_amount(self):
+        """
+
+        :return: an amout in centime format
+        """
         try:
             return int(float(self.cleaned_data['amount']) * 100)
         except ValueError:
             self.add_error('amount', 'the amount should be a decimal with 2 digit after comma')
 
     def clean_card_number(self):
+        """
+
+        :return: a valid card number
+        """
         data = self.cleaned_data['card_number']
         if len(str(data)) != 16 or data.__class__ is not int:
             self.add_error('card_number', 'the card number should be a 16 digit number')

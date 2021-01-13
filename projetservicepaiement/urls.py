@@ -16,7 +16,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
-from app.views import CreatePayment, PaymentList, ValidationPayment
+from app.views import CreatePayment, PaymentList, ValidationPayment, PaymentAccepted
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -26,5 +26,6 @@ urlpatterns += [
     path('', PaymentList.as_view(), name='home'),
     path('paymentForm/', CreatePayment.as_view(), name='payment_form'),
     path('paymentList/', PaymentList.as_view(), name='payment_list'),
+    path('PaymentAccepted/<int:pk>', PaymentAccepted.as_view(), name='payment_accepted'),
     path('ValidationPayment/', ValidationPayment.as_view())
 ]

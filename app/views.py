@@ -10,7 +10,7 @@ from app.forms import PaymentForm
 from app.models.payment import Payment
 from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
-from django.views.generic import ListView, FormView
+from django.views.generic import ListView, FormView, DetailView
 from django.http import HttpResponse
 from django.utils.decorators import method_decorator
 from django.views import generic
@@ -19,7 +19,7 @@ from django.views.decorators.csrf import csrf_exempt
 
 
 class CreatePayment(FormView):
-    success_url = reverse_lazy('payment_list')
+    success_url = reverse_lazy('payment_accepted', Payment.objects.last().id)
     model = Payment
     form_class = PaymentForm
     template_name = 'paymentForm.html'
@@ -31,7 +31,7 @@ class CreatePayment(FormView):
         :return context:
         """
         context = super().get_context_data(**kwargs)
-        context['title'] = 'Formulaire de paiments'
+        context['title'] = 'Payment form'
         return context
 
     def form_valid(self, form):
@@ -59,8 +59,8 @@ class PaymentList(ListView):
     def get_context_data(self, traited_payments=None, **kwargs):
         """
 
-        :param traited_payments:
-        :return context:
+        :param traited_payments: for change the centime format to euro format of the amount
+        :return context: fill with traited_payment to send in front
         """
         if traited_payments is None:
             traited_payments = []
@@ -70,7 +70,7 @@ class PaymentList(ListView):
             payment.amount = payment.amount / 100
             traited_payments.insert(len(traited_payments), payment)
         context['payments'] = traited_payments
-        context['title'] = 'Liste des paiements'
+        context['title'] = 'Payment\'s list'
         return context
 
 
@@ -97,7 +97,7 @@ class ValidationPayment(generic.View):
                             format='%(asctime)s - %(message)s',
                             level=logging.WARNING,
                             datefmt='%d-%b-%y %H:%M:%S')
-        logging.error(request);
+        logging.error(request)
         if not 'id' in received:
             logging.error(f'no ID {request.META.get("REMOTE_ADDR")}')
             return HttpResponse(status=404)
@@ -129,7 +129,7 @@ def send_payment(*args, **kwargs):
             current_payment = get_object_or_404(Payment, id=kwargs["id"])
             print(eut.parsedate_to_datetime(response.headers._store['date'][1]))
             current_payment.date = eut.parsedate_to_datetime(response.headers._store['date'][1])
-            #current_payment.date = datetime.datetime(*eut.parsedate(response.headers._store['date'][1])[:6])
+            # current_payment.date = datetime.datetime(*eut.parsedate(response.headers._store['date'][1])[:6])
             current_payment.state = "Accepted"
             current_payment.save()
             return {'isTrue': True}
@@ -148,3 +148,20 @@ def send_payment(*args, **kwargs):
                             datefmt='%d-%b-%y %H:%M:%S')
         logging.error(f'{e} - id: {kwargs["id"]} - amount: {kwargs["amount"]}')
         return {'isTrue': False, 'error': error}
+
+
+class PaymentAccepted(DetailView):
+    template_name = 'paymentAccepted.html'
+    model = Payment
+
+    def get_context_data(self,  **kwargs):
+        """
+
+        :param kwargs:
+        :return: context full with te current payment
+        """
+        context = super().get_context_data(**kwargs)
+        payment = get_object_or_404(Payment, id=kwargs['pk'])
+        payment.amount = payment.amount / 100
+        context['payment'] = payment
+        return context

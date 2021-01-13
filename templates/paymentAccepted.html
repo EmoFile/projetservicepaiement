@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block main %}
+    <h1>Accepted Payment</h1>
+    <table class="table table-striped">
+        <thead class="thead-dark">
+        <tr>
+            <th scope="col">Id</th>
+            <th scope="col">Amount</th>
+            <th scope="col">Date</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td>Payment ID : {{ payment.id }}</td>
+            <td>Amount : {{ payment.amount }}€</td>
+            <td>Date : {{ payment.date }}</td>
+        </tr>
+        </tbody>
+    </table>
+{% endblock %}

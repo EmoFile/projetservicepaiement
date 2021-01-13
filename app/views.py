@@ -25,11 +25,21 @@ class CreatePayment(FormView):
     template_name = 'paymentForm.html'
 
     def get_context_data(self, **kwargs):
+        """
+
+        :param kwargs:
+        :return context:
+        """
         context = super().get_context_data(**kwargs)
         context['title'] = 'Formulaire de paiments'
         return context
 
     def form_valid(self, form):
+        """
+
+        :param form:
+        :return form:
+        """
         Payment.objects.create(
             amount=form.cleaned_data['amount'],
             card_number=form.cleaned_data['card_number']
@@ -47,6 +57,11 @@ class PaymentList(ListView):
     model = Payment
 
     def get_context_data(self, traited_payments=None, **kwargs):
+        """
+
+        :param traited_payments:
+        :return context:
+        """
         if traited_payments is None:
             traited_payments = []
         context = super().get_context_data(**kwargs)
@@ -60,6 +75,9 @@ class PaymentList(ListView):
 
 
 class ValidationPayment(generic.View):
+    """
+    Only post can be called in this view
+    """
     http_method_names = ['post']
 
     @method_decorator(never_cache)
@@ -68,7 +86,12 @@ class ValidationPayment(generic.View):
         return super().dispatch(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
-        print('nassim')
+        """
+        Only Request with id in his JSON will work. If the ID is not existing in the base tha t will do 404 or 403
+        In the production the security will check the IP (like the logg tell)
+        :param request: Mandatory: the request with the POST where the ID is mandatory. if id is not existing error 404
+        :return HttpResponse:
+        """
         received = json.loads(request.body)
         logging.basicConfig(filename='contactValidationPayment.log',
                             format='%(asctime)s - %(message)s',
@@ -91,6 +114,13 @@ class ValidationPayment(generic.View):
 
 
 def send_payment(*args, **kwargs):
+    """
+    This function will send to the middleware the payment for be accepted. The middleware will response status code 202 if ok
+
+    :key id: Mandatory: this key will be send to web service for paiment to identify the validation after
+    :key moment Mandatory: this key will be send to web service for paiment.
+    :return JSON{istrue Mandatory, error Optional {if n error from the request is occured} :
+    """
     payment = {"id": kwargs["id"], "amount": kwargs["amount"]}
     try:
         response = requests.post("http://127.0.0.1:8000/ValidationPayment/", json=payment)

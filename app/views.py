@@ -19,7 +19,7 @@ from django.views.decorators.csrf import csrf_exempt
 
 
 class CreatePayment(FormView):
-    success_url = reverse_lazy('payment_accepted', Payment.objects.last().id)
+    success_url = reverse_lazy('payment_accepted', kwargs={'pk': Payment.objects.last().id})
     model = Payment
     form_class = PaymentForm
     template_name = 'paymentForm.html'
@@ -154,7 +154,7 @@ class PaymentAccepted(DetailView):
     template_name = 'paymentAccepted.html'
     model = Payment
 
-    def get_context_data(self,  **kwargs):
+    def get_context_data(self, **kwargs):
         """
 
         :param kwargs:

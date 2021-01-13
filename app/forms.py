@@ -1,3 +1,4 @@
+from decimal import Decimal
 from itertools import count
 
 from django import forms
@@ -12,11 +13,11 @@ class PaymentForm(forms.ModelForm):
         model = Payment
         exclude = ['date', 'state']
 
-    amount = forms.DecimalField(max_value=9999.99,
-                                widget=widgets.TextInput(
+    amount = forms.FloatField(max_value=9999.99,
+                              widget=widgets.TextInput(
                                     attrs={'placeholder': 'Enter the amount'}))
     card_number = forms.IntegerField(widget=widgets.TextInput(
-                                        attrs={'placeholder': 'Enter Card number'}))
+        attrs={'placeholder': 'Enter Card number'}))
 
     def clean_amount(self):
         try:

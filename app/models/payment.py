@@ -21,6 +21,6 @@ class Payment(models.Model):
                                    null=False)
     date = models.DateTimeField(blank=True,
                                 null=True)
-    amount = models.BigIntegerField(validators=[MinValueValidator(0), MaxValueValidator(999999)],
+    amount = models.BigIntegerField(validators=[MinValueValidator(0), MaxValueValidator(9999999)],
                                     blank=False,
                                     null=False)

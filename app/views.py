@@ -23,6 +23,10 @@ class CreatePayment(FormView):
     form_class = PaymentForm
     template_name = 'paymentForm.html'
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.result_id = None
+
     def get_context_data(self, **kwargs):
         """
 
@@ -32,6 +36,9 @@ class CreatePayment(FormView):
         context = super().get_context_data(**kwargs)
         context['title'] = 'Payment form'
         return context
+
+    def get_success_url(self):
+        return reverse_lazy('payment_accepted', kwargs={'pk': self.result_id})
 
     def form_valid(self, form):
         """
@@ -45,12 +52,12 @@ class CreatePayment(FormView):
         )
         created_payment = Payment.objects.last()
         result = send_payment(id=created_payment.id, amount=created_payment.amount)
+
         if not result['isTrue']:
             form.add_error('card_number', result['error'])
             return super().form_invalid(form)
-        super().form_valid(form)
-        reverse_lazy('payment_accepted', kwargs={'pk': result['id']})
-
+        self.result_id = result['id']
+        return super().form_valid(form)
 
 
 class PaymentList(ListView):
